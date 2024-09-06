@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Product } from '../../models/product';
+import CartService from '../../services/cart-service';
+import TokenService from '../../services/token-service';
 
 interface ProductPopupProps {
   product: Product;
@@ -17,11 +19,13 @@ interface ProductPopupProps {
 const ProductPopup: React.FC<ProductPopupProps> = ({
   product,
   onClose,
-  onAddToCart,
   error,
   filteredProducts,
   switchToProduct
 }) => {
+  const tokenService = TokenService();
+  const cartService = CartService();
+  const { insertProductToCart } = CartService();
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedSize, onSizeSelect] = useState<number>(1);
 
@@ -56,6 +60,18 @@ const ProductPopup: React.FC<ProductPopupProps> = ({
     }
   };
 
+  //Add to cart 
+  const handleAddToCart = () => {
+    const user_id = tokenService.getUserId();
+    const productToAdd = {
+      user_id: 1,
+      product_id: product.product_id,
+      size_id: selectedSize,
+      quantity: quantity,
+    };
+    insertProductToCart(productToAdd);
+  }
+
   return (
     <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-50 z-50 overflow-y-auto">
       <button
@@ -87,7 +103,7 @@ const ProductPopup: React.FC<ProductPopupProps> = ({
                     key={size.size_id}
                     onClick={() => onSizeSelect(size.size_id)}
                     className={`px-3 py-1 border border-gray-300 rounded-lg cursor-pointer ${
-                      size.size_id === selectedSize ? 'bg-blue-200' : ''
+                      size.size_id === selectedSize ? 'bg-gray-900 text-white' : ''
                     }`}
                   >
                     {size.size_label}
@@ -111,9 +127,9 @@ const ProductPopup: React.FC<ProductPopupProps> = ({
             </div>
 
             <button
-              onClick={() => onAddToCart(product, selectedSize || -1, quantity)}
+              onClick={handleAddToCart}
               disabled={!selectedSize || quantity <= 0 || quantity > product.stock}
-              className="ml-2 mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 disabled:bg-gray-400"
+              className="ml-2 mt-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-500 disabled:bg-gray-400"
             >
               Add to Cart
             </button>
